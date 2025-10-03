@@ -7,7 +7,6 @@ class Node():
         self.parent = parent
         self.action = action
 
-
 class StackFrontier(): # LIFO
     def __init__(self):
         self.frontier = []
@@ -81,7 +80,6 @@ class Maze():
 
         self.solution = None
 
-
     def print(self):
         solution = self.solution[1] if self.solution is not None else None
         print()
@@ -100,7 +98,6 @@ class Maze():
             print()
         print()
 
-
     def neighbors(self, state):
         row, col = state
         candidates = [
@@ -115,7 +112,6 @@ class Maze():
             if 0 <= r < self.height and 0 <= c < self.width and not self.walls[r][c]:
                 result.append((action, (r, c)))
         return result
-
 
     def solve(self):
         """Finds a solution to maze, if one exists."""
@@ -176,7 +172,6 @@ class Maze():
                     child = Node(state=state, parent=node, action=action)
                     frontier.add(child)
 
-
     def output_image(self, filename, show_solution=True, show_explored=False):
         from PIL import Image, ImageDraw
         cell_size = 50
@@ -226,6 +221,16 @@ class Maze():
                 )
 
         img.save(filename)
+
+    def heuristique(self, N):   
+        # self.goal et N.state sont des tuples de coordonnées
+        int xb = self.goal[0]
+        int yb = self.goal[1]
+        int xn = N.state[0]
+        int yn = N.state[1]
+
+        # h(N ) = |xB − xN| + |yB − yN|
+        return (abs(xb - xn) + abs(yb - yn))
 
 
 if len(sys.argv) < 2 and len(sys.argv) > 4:
