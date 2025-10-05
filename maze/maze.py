@@ -7,6 +7,12 @@ class Node():
         self.parent = parent
         self.action = action
 
+class NodePriority(Node):
+    def __init__(self, state, parent, action, cost, value):
+        super().__init__(state, parent, action)
+        self.cost = cost
+        self.value = value
+
 class StackFrontier(): # LIFO
     def __init__(self):
         self.frontier = []
@@ -28,8 +34,6 @@ class StackFrontier(): # LIFO
             self.frontier = self.frontier[:-1] # all elements of the sequence but the last
             return node # return the erased node
 
-# Pour implémenter le parcours en largeur, vous créerez une classe héritant de StackFrontier(),
-# puis vous l'utiliserez dans la méthode solve() en changeant le type de l'objet frontière
 class QueueFrontier(StackFrontier): # FIFO
     def remove(self):   # First-Out
         if self.empty():
@@ -38,6 +42,25 @@ class QueueFrontier(StackFrontier): # FIFO
             node = self.frontier[0] # first element : FIFO
             self.frontier = self.frontier[1:]   # all elements of the sequence but the first
             return node 
+
+class PriorityQueueFrontier(StackFrontier):
+    def lowest_value(self, maze):
+        node_with_lowest_value = self.frontier[0]
+        node_with_lowest_value.value = maze.valeur(node_with_lowest_value)
+        lowest_value = node_with_lowest_value.value
+
+        for node in self.frontier:
+            node.value = maze.valeur(node)
+            valeur = node.value
+            if valeur < lowest_value:
+                lowest_value = valeur
+                node_with_lowest_value = node
+        return node_with_lowest_value
+
+    def remove(self, maze):
+        node = self.lowest_value(maze)
+        self.frontier.remove(node)
+        return node
 
 class Maze():
 
@@ -120,19 +143,21 @@ class Maze():
         self.num_explored = 0
 
         # Initialize frontier to just the starting position
-        start = Node(state=self.start, parent=None, action=None)
-
+        if sys.argv[1] == '-a':
+            start = NodePriority(state=self.start, parent=None, action=None, cost=0, value=0)   
+        else:
+            start = Node(state=self.start, parent=None, action=None)    # all arguments are "positional"
+        
         if len(sys.argv) == 2:
-            frontier = StackFrontier()
-            # print("Utilisation d'une PILE")
+            frontier = StackFrontier()  # par défaut, le programme utilise la mise en oeuvre de base
         else:
             match sys.argv[1]:
                 case "-d":
                     frontier = StackFrontier()
-                    # print("Utilisation d'une PILE")
                 case "-b":
                     frontier = QueueFrontier()
-                    # print("Utilisation d'une FILE")
+                case "-a":
+                    frontier = PriorityQueueFrontier()
 
         frontier.add(start)
 
@@ -147,7 +172,10 @@ class Maze():
                 raise Exception("no solution")
 
             # Choose a node from the frontier
-            node = frontier.remove()
+            if sys.argv[1] == '-a':
+                node = frontier.remove(self)    
+            else:
+                node = frontier.remove()
             self.num_explored += 1
 
             # If node is the goal, then we have a solution
@@ -169,7 +197,10 @@ class Maze():
             # Add neighbors to frontier
             for action, state in self.neighbors(node.state):
                 if not frontier.contains_state(state) and state not in self.explored:
-                    child = Node(state=state, parent=node, action=action)
+                    if sys.argv[1] == '-a':
+                        child = NodePriority(state=state, parent=node, action=action, cost=node.cost + 1, value=0)
+                    else:
+                        child = Node(state=state, parent=node, action=action)
                     frontier.add(child)
 
     def output_image(self, filename, show_solution=True, show_explored=False):
@@ -222,16 +253,19 @@ class Maze():
 
         img.save(filename)
 
-    def heuristique(self, N):   
+    def heuristique(self, NodePriority):   
         # self.goal et N.state sont des tuples de coordonnées
-        int xb = self.goal[0]
-        int yb = self.goal[1]
-        int xn = N.state[0]
-        int yn = N.state[1]
+        xb = self.goal[0]
+        yb = self.goal[1]
+        xn = NodePriority.state[0]
+        yn = NodePriority.state[1]
 
         # h(N ) = |xB − xN| + |yB − yN|
         return (abs(xb - xn) + abs(yb - yn))
 
+    def valeur(self, NodePriority):
+        return NodePriority.cost + self.heuristique(NodePriority)
+        
 
 if len(sys.argv) < 2 and len(sys.argv) > 4:
     sys.exit("Usage: python maze.py [-h] [-d | -b | -a] maze.txt")
