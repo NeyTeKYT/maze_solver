@@ -33,7 +33,7 @@ La dernière implémentation (`-a`) propose la *solution optimale* dans **4 des 
 
 --- 
 
-## 🎥 Gifs 
+## 🎥 Gifs d'utilisation du programme sur les 5 labyrinthes avec les 3 modes de résolution
 
 ![demo_maze1](https://github.com/user-attachments/assets/25bb1f55-8797-43e1-8d05-36db16a64eda)
 ![demo_maze2](https://github.com/user-attachments/assets/ffc523a0-2395-4a79-b252-a851d3051261)
